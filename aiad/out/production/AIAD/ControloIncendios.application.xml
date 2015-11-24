@@ -67,7 +67,9 @@
             </env:objecttypes>
 
 
-
+            <env:tasktypes>
+                <env:tasktype name="move" class="MoveTask" />
+            </env:tasktypes>
 
             <env:processtypes>
                 <env:processtype name="spread_fire" class="SpreadFireProcess"/>
@@ -134,7 +136,7 @@
     </extensiontypes>
 
     <componenttypes>
-        <componenttype name="Fireman" filename="FireFighting.Agents.FiremanBDI.class"/>
+        <componenttype name="Fireman" filename="FireFighting\Agents\FiremanBDI.class"/>
     </componenttypes>
 
     <configurations>
