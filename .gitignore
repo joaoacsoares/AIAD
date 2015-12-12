@@ -1,3 +1,12 @@
-aiad/out/
+aiad/.idea
 aiad/.idea/
-aiad/AIAD.iml
+aiad/.idea/*
+aiad//.idea
+aiad//.idea/
+aiad//.idea/*
+aiad/out
+aiad/out/
+aiad/out/*
+aiad//out
+aiad//out/
+aiad//out/*
