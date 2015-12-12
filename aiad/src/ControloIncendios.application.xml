@@ -23,11 +23,12 @@
         <import>jadex.bridge.service.*</import>
         <import>jadex.bridge.service.search.*</import>
         <import>jadex.bridge.service.types.clock.IClockService</import>
-        <import>FireFighting.Agents.Fireman.*</import>
+        <import>Firefighting.Agents.Firefighter.*</import>
+        <import>Firefighting.Agents.ControlCenter.*</import>
     </imports>
 
     <extensiontypes>
-        <env:envspacetype name="2dspace" class="Grid2D" width="10" height="10">
+        <env:envspacetype name="2dspace" class="Grid2D" width="50" height="50">
             <env:objecttypes>
                 <env:objecttype name="fire">
                     <env:property name="position" class="IVector2" event="true"/>
@@ -35,33 +36,36 @@
                 </env:objecttype>
 
                 <env:objecttype name="controlcenter">
-                    <env:property name="fires" class="IVector2[]" event="true"/>
-                    <env:property name="buildings" class="IVector2[]" event="true"/>
+                    <env:property name="firelist"           class="IVector2[]"   event="true"   />
+                    <env:property name="buildingslist"         class="IVector2[]"   event="true"   />
+                    <env:property name="extinguishpos"  class="IVector2[]"   event="true"   />
                 </env:objecttype>
 
                 <env:objecttype name="tree">
-                    <env:property name="position" class="IVector2" event="true"/>
-                    <env:property name="density" class="String" dynamic="true"/>
-                    <env:property name="burnTime" class="String" dynamic="true"/>
-                    <env:property name="hp" class="String" dynamic="true"/>
-                    <env:property name="fuelTime" class="String" dynamic="true"/>
-                    <env:property name="state" class="String" dynamic="true"/>
+                    <env:property name="position"        class="IVector2"   event="true"   />
+                    <env:property name="density"         class="String"     dynamic="true" />
+                    <env:property name="burningTime"     class="String"     dynamic="true" />
+                    <env:property name="fireResistance"  class="String"     dynamic="true" />
+                    <env:property name="fuelTime"        class="String"     dynamic="true" />
+                    <env:property name="state"           class="String"     dynamic="true" />
                 </env:objecttype>
 
                 <env:objecttype name="wind">
-                    <env:property name="x" class="String" dynamic="true"/>
-                    <env:property name="y" class="String" dynamic="true"/>
+                    <env:property name="x"               class="String"     dynamic="true"/>
+                    <env:property name="y"               class="String"     dynamic="true"/>
                 </env:objecttype>
 
                 <env:objecttype name="building">
-                    <env:property name="position" class="IVector2" dynamic="true"/>
-                    <env:property name="type" class="String" dynamic="true"/>
+                    <env:property name="position"        class="IVector2"   dynamic="true"/>
+                    <env:property name="type"            class="String"     dynamic="true"/>
                 </env:objecttype>
 
-                <env:objecttype name="fireman">
-                    <env:property name="position" event="false" dynamic="true"/>
-                    <env:property name="speed" class="double" dynamic="true"/>
-                    <env:property name="state" class="String" dynamic="true"/>
+                <env:objecttype name="fighter">
+                    <env:property name="position"       event="false"  dynamic="true"/>
+                    <env:property name="vision"         class="double" dynamic="true"/> <!-- visao a volta -->
+                    <env:property name="speed"          class="double" dynamic="true"/>
+                    <env:property name="extinguished"   class="double" dynamic="true"/> <!-- conta quadriculas extinguidas -->
+                    <env:property name="state"          class="String" dynamic="true"/> <!-- inativo, a mover-se, a apagar fogo -->
                 </env:objecttype>
 
             </env:objecttypes>
@@ -72,13 +76,13 @@
             </env:tasktypes>
 
             <env:processtypes>
-                <env:processtype name="spread_fire" class="SpreadFireProcess"/>
-                <env:processtype name="create_forest" class="CreateForestProcess"/>
+                <env:processtype name="spread_fire" class="Forest.Processes.SpreadFireProcess"/>
+                <env:processtype name="create_forest" class="Forest.Processes.CreateForestProcess"/>
             </env:processtypes>
 
 
             <env:dataviews>
-                <env:dataview name="all_view" class="GeneralDataView2D"/>
+                <env:dataview name="all_view" class="GeneralDataView2D" />
             </env:dataviews>
 
             <env:avatarmappings>
@@ -86,8 +90,8 @@
 
             <env:perspectives>
                 <env:perspective name="icons" class="Perspective2D" objectplacement="center">
-                    <env:drawable objecttype="fireman" height="1.0" width="1.0">
-                        <env:texturedrectangle layer="4" height="1" width="1" imagepath="images/fireman.png"/>
+                    <env:drawable objecttype="fighter" height="1.0" width="1.0">
+                        <env:texturedrectangle layer="4" height="1" width="1" imagepath="images/firefighter.png"/>
                     </env:drawable>
 
 
@@ -96,33 +100,33 @@
                     </env:drawable>
 
                     <env:drawable objecttype="tree" height="1.0" width="1.0">
-                        <env:texturedrectangle layer="1" height="1" width="1" imagepath="images/tree_brown.png">
-                            <env:drawcondition>$object.density.equals(0)  &amp;&amp; ! $object.fuelTime.equals( $object.burnTime )</env:drawcondition>
+                        <env:texturedrectangle layer="1" height="1" width="1" imagepath="images/tree_low.png">
+                            <env:drawcondition>$object.density.equals(0)  &amp;&amp; ! $object.fuelTime.equals( $object.burningTime )  </env:drawcondition>
                         </env:texturedrectangle>
 
-                        <env:texturedrectangle layer="1" height="1" width="1" imagepath="images/tree_yellow.png">
-                            <env:drawcondition>$object.density.equals(1)  &amp;&amp; ! $object.fuelTime.equals( $object.burnTime )</env:drawcondition>
+                        <env:texturedrectangle layer="1" height="1" width="1" imagepath="images/tree_medium.png">
+                            <env:drawcondition>$object.density.equals(1)  &amp;&amp; ! $object.fuelTime.equals( $object.burningTime ) </env:drawcondition>
                         </env:texturedrectangle>
 
-                        <env:texturedrectangle layer="1" height="1" width="1" imagepath="images/tree_green.png">
-                            <env:drawcondition>$object.density.equals(2) &amp;&amp; ! $object.fuelTime.equals( $object.burnTime )</env:drawcondition>
+                        <env:texturedrectangle layer="1" height="1" width="1" imagepath="images/tree_high.png">
+                            <env:drawcondition>$object.density.equals(2) &amp;&amp; ! $object.fuelTime.equals( $object.burningTime ) </env:drawcondition>
                         </env:texturedrectangle>
-                        <env:texturedrectangle layer="1" height="1" width="1" imagepath="images/tree_burned.png">
-                            <env:drawcondition> $object.fuelTime.equals( $object.burnTime ) </env:drawcondition>
+                        <env:texturedrectangle layer="1" height="1" width="1" imagepath="images/tree_burnt.png">
+                            <env:drawcondition> $object.fuelTime.equals( $object.burningTime ) </env:drawcondition>
                         </env:texturedrectangle>
                     </env:drawable>
 
                     <env:drawable objecttype="building" height="1.0" width="1.0">
-                        <env:texturedrectangle layer="3" height="1" width="1" imagepath="images/house.png">
+                        <env:texturedrectangle layer="3" height="1" width="1" imagepath="images/building.png"> <!-- verde -->
                             <env:drawcondition>$object.type.equals(1)</env:drawcondition>
                         </env:texturedrectangle>
                     </env:drawable>
 
                     <env:prelayers>
-                        <env:tiledlayer width="0.4" height="0.4" imagepath="images/background.png"/>
+                        <env:tiledlayer width="0.4" height="0.4" imagepath="images/background.png" />
                     </env:prelayers>
                     <env:postlayers>
-                        <env:gridlayer width="1.0" height="1.0" color="black"/>
+                        <env:gridlayer width="1.0" height="1.0" color="black" />
                     </env:postlayers>
                 </env:perspective>
             </env:perspectives>
@@ -136,7 +140,8 @@
     </extensiontypes>
 
     <componenttypes>
-        <componenttype name="Fireman" filename="FireFighting\Agents\FiremanBDI.class"/>
+        <componenttype name="Firefighter" filename="Firefighting\Agents\Firefighter\FirefighterBDI.class"/>
+        <componenttype name="ControlCenter" filename="Firefighting\Agents\ControlCenter\ControlCenterBDI.class"/>
     </componenttypes>
 
     <configurations>
@@ -146,12 +151,27 @@
 
                     <env:objects>
                         <env:object type="building">
-                            <env:property name="position">new Vector2Double(0, 0)</env:property>
+                            <env:property name="position">new Vector2Double(16, 5)</env:property>
                             <env:property name="type">1</env:property>
+                        </env:object>
+                        <env:object type="building">
+                            <env:property name="position">new Vector2Double(30,30)</env:property>
+                            <env:property name="type">2</env:property>
+                        </env:object>
+
+
+                        <env:object type="fire">
+                            <env:property name="position">new Vector2Double(20, 2)</env:property>
+                            <env:property name="extinct">false</env:property>
                         </env:object>
 
                         <env:object type="fire">
-                            <env:property name="position">new Vector2Double(9, 9)</env:property>
+                            <env:property name="position">new Vector2Double(30, 2)</env:property>
+                            <env:property name="extinct">false</env:property>
+                        </env:object>
+
+                        <env:object type="fire">
+                            <env:property name="position">new Vector2Double(15, 15)</env:property>
                             <env:property name="extinct">false</env:property>
                         </env:object>
                     </env:objects>
@@ -163,16 +183,65 @@
 
 
                     <env:observers>
-                        <env:observer name="firefighting" dataview="view_all" perspective="icons"/>
+                        <env:observer name="AIAD_T05_02" dataview="view_all" perspective="icons"/>
                     </env:observers>
                 </env:envspace>
             </extensions>
 
             <components>
-                <component type="Fireman"/>
+                <component type="ControlCenter"/>
+                <component type="Firefighter"/>
             </components>
 
         </configuration>
+
+        <configuration name="Easy Task">
+            <extensions>
+                <env:envspace name="2dspace" type="2dspace" width="15" height="15">
+
+                    <env:objects>
+                        <env:object type="building">
+                            <env:property name="position">new Vector2Double(3, 3)</env:property>
+                            <env:property name="type">1</env:property>
+                        </env:object>
+
+
+                        <env:object type="fire">
+                            <env:property name="position">new Vector2Double(12, 8)</env:property>
+                            <env:property name="extinct">false</env:property>
+                        </env:object>
+
+                        <env:object type="fire">
+                            <env:property name="position">new Vector2Double(13, 10)</env:property>
+                            <env:property name="extinct">false</env:property>
+                        </env:object>
+
+                        <env:object type="fire">
+                            <env:property name="position">new Vector2Double(12, 10)</env:property>
+                            <env:property name="extinct">false</env:property>
+                        </env:object>
+                    </env:objects>
+
+                    <env:processes>
+                        <env:process type="spread_fire"/>
+                        <env:process type="create_forest"/>
+                    </env:processes>
+
+
+                    <env:observers>
+                        <env:observer name="AIAD_T05_02" dataview="view_all" perspective="icons"/>
+                    </env:observers>
+                </env:envspace>
+            </extensions>
+
+            <components>
+                <component type="ControlCenter"/>
+                <component type="Firefighter"/>
+            </components>
+
+        </configuration>
+
+
     </configurations>
 
 </applicationtype>
